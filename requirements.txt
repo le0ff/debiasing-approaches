@@ -1,0 +1,4 @@
+numpy
+gensim
+ipykernel
+scikit-learn
