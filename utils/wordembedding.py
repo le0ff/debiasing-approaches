@@ -22,7 +22,7 @@ class WordEmbedding:
         print("*** Reading data from " + filename)
         if filename.endswith(".bin"):
             import gensim.models
-            model =gensim.models.KeyedVectors.load_word2vec_format(filename, binary=True)
+            model = gensim.models.KeyedVectors.load_word2vec_format(filename, binary=True)
             words = sorted([w for w in model.vocab], key=lambda w: model.vocab[w].index)
             vecs = [model[w] for w in words]
         else:
@@ -114,8 +114,9 @@ class WordEmbedding:
         dots = self.vecs.dot(self.v(word))
         return [self.words[i] for i, dot in enumerate(dots) if dot >= 1-thresh/2]
     
-
-    #function that solves the analogy task for 1 word: so given seed pair a and b and word c, find word d such that a is to c as b is to d
-    def analogy(self, a, b, c, topn=500, thresh=1, max_words=50000):
-        v = self.diff(a, b) + self.v(c)
-        return self.n_analogies(v, topn, thresh, max_words)
+    def specific_analogy(self, a, b, c, topn=500, thresh=1, max_words=50000):
+        v = self.diff(a, b) 
+        all_analogies = self.n_analogies(v, topn, thresh, max_words)
+        #filter analogies that do not contain c
+        return [(x, y, s) for x, y, s in all_analogies if c in [x, y]]
+    

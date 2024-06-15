@@ -2,3 +2,4 @@ numpy
 gensim
 ipykernel
 scikit-learn
+pandas
