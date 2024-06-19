@@ -3,3 +3,4 @@ gensim
 ipykernel
 scikit-learn
 pandas
+matplotlib

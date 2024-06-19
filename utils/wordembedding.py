@@ -1,10 +1,7 @@
 import numpy as np
 import scipy
-import re
-import sys
-
-#import scipy.sparse
-#from sklearn.decomposition import PCA
+import matplotlib.pyplot as plt
+from sklearn.decomposition import PCA
 
 
 """
@@ -14,6 +11,7 @@ Based on "Man is to Computer Programmer as Woman is to Homemaker? Debiasing Word
 by Tolga Bolukbasi, Kai-Wei Chang, James Zou, Venkatesh Saligrama, and Adam Kalai
 2016
 """
+
 class WordEmbedding:
     def __init__(self, filename):
         self.thresh = None
@@ -120,3 +118,32 @@ class WordEmbedding:
         #filter analogies that do not contain c
         return [(x, y, s) for x, y, s in all_analogies if c in [x, y]]
     
+    def visualize_word_embedding(self, from_idx=400, to_idx=500):
+        pca = PCA(n_components=1)
+        X = self.vecs[from_idx:to_idx]
+        pca = PCA(n_components=2)
+        pca.fit(X)
+
+        #principal components for plotting
+        pc1 = pca.components_[0]
+        pc2 = pca.components_[1]
+
+        projections_pc1 = X.dot(pc1)
+        projections_pc2 = X.dot(pc2)
+        subset_words = self.words[from_idx:to_idx]
+
+        #plotting
+        plt.figure(figsize=(10, 6))
+        plt.scatter(projections_pc1, projections_pc2, alpha=0.5, label='Subset of words')
+
+        #annotate subset words
+        for word, x, y in zip(subset_words, projections_pc1, projections_pc2):
+            plt.text(x, y, word, fontsize=8)
+
+        plt.axhline(0, color='gray', linestyle='--')
+        plt.axvline(0, color='gray', linestyle='--')
+        plt.xlabel('Projection on first principal component')
+        plt.ylabel('Projection on second principal component')
+        plt.title('Subset of Word Embeddings on Principal Component Subspace')
+        plt.legend()
+        plt.show()

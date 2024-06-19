@@ -2,20 +2,23 @@ import numpy as np
 from sklearn.decomposition import PCA
 import json
 import os
+import matplotlib.pyplot as plt
 
+"""
+Utils
+
+Based on "Man is to Computer Programmer as Woman is to Homemaker? Debiasing Word Embeddings"
+by Tolga Bolukbasi, Kai-Wei Chang, James Zou, Venkatesh Saligrama, and Adam Kalai
+2016
+"""
 
 PKG_DIR = os.path.dirname(os.path.abspath(__file__))
+
+#loads professions from json file
 def load_professions():
     professions_file = os.path.join(PKG_DIR, '../data', 'professions.json')
     with open(professions_file, 'r') as f:
         professions = json.load(f)
-
-    #should we remove this?
-    print('Loaded professions\n' +
-          'Format:\n' +
-          'word,\n' +
-          'definitional female -1.0 -> definitional male 1.0\n' +
-          'stereotypical female -1.0 -> stereotypical male 1.0')
     return professions
 
 
@@ -49,8 +52,17 @@ def compute_PC(pairs, embedding, num_components = 10):
     matrix = np.array(matrix)
     pca = PCA(n_components = num_components)
     pca.fit(matrix)
-    #we could plot something for the demo?
-    # bar(range(num_components), pca.explained_variance_ratio_)
+    
+    #principal components of definitional gender pairs
+    #plot bar plot in range of num components and explained variance ratio
+    plt.figure(figsize=(8, 6))
+    plt.bar(range(num_components), pca.explained_variance_ratio_)
+    plt.title("Principal Components of definitional gender pairs")
+    plt.xlabel("Principal Components")
+    plt.ylabel("Explained Variance Ratio")
+    plt.xticks(range(num_components))
+    plt.show()
+
     return pca
 
 def drop(u, v):
