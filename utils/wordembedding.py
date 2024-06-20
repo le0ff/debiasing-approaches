@@ -13,7 +13,39 @@ by Tolga Bolukbasi, Kai-Wei Chang, James Zou, Venkatesh Saligrama, and Adam Kala
 """
 
 class WordEmbedding:
+    """
+    Class to represent word embeddings.
+
+    Methods: 
+    __init__: Initialize the WordEmbedding object by reading the word embeddings from a file.
+
+    reindex: Reindex the words in the word embeddings.
+
+    normalize: Normalize the word embeddings to unit length.
+
+    v: Get the vector representation of a word.
+
+    diff: Get the difference of the vector representations of two words.
+
+    n_analogies: Get the n analogies of a vector, using cosine similarity. Takes a vector (direction), a threshold, and a maximum number of words.
+
+    compute_neighbors_if_necessary: Compute the neighbors of a word (if needed), using cosine similarity.
+
+    neighbors: Get the neighbors of a word, using cosine similarity.
+
+    specific_analogy: Get the specific analogy of a vector, taking a, b, and c as input where a:b::c:?. Based on n_analogies.
+
+    visualize_word_embedding: Visualize the word embeddings using PCA.
+    
+    """
+
+
     def __init__(self, filename):
+        """
+        Initialize the WordEmbedding object by reading the word embeddings from a file.
+
+        filename: Name of the file containing the word embeddings.
+        """
         self.thresh = None
         self.max_words = None
         self.desc = filename
@@ -34,7 +66,6 @@ class WordEmbedding:
                     if len(vecs) and vecs[-1].shape!=v.shape:
                         print("Got weird line", line)
                         continue
-    #                 v /= np.linalg.norm(v)
                     words.append(s[0])
                     vecs.append(v)
         self.vecs = np.array(vecs, dtype='float32')
@@ -46,6 +77,9 @@ class WordEmbedding:
             self.normalize()
 
     def reindex(self):
+        """
+        Reindex the words in the word embeddings.
+        """
         self.index = {w: i for i, w in enumerate(self.words)}
         self.n, self.d = self.vecs.shape
         assert self.n == len(self.words) == len(self.index)
@@ -53,19 +87,38 @@ class WordEmbedding:
         print(self.n, "words of dimension", self.d, ":", ", ".join(self.words[:4] + ["..."] + self.words[-4:]))
 
     def normalize(self):
+        """
+        Normalize the word embeddings to unit length.
+        """
         self.desc += ", normalize"
         self.vecs /= np.linalg.norm(self.vecs, axis=1)[:, np.newaxis]
         self.reindex()
 
     def v(self, word):
+        """
+        Get the vector representation of a word.
+        """
         return self.vecs[self.index[word]]
     
     def diff(self, word1, word2):
+        """
+        Get the difference of the vector representations of two words.
+        """
         v = self.vecs[self.index[word1]] - self.vecs[self.index[word2]]
         return v/np.linalg.norm(v)
     
     def n_analogies(self, v, topn=500, thresh=1, max_words=50000):
-        """Metric is cos(a-c, b-d) if |b-d|^2 < thresh, otherwise 0
+        """
+        Get the n analogies of a vector, using cosine similarity.
+
+        v: Vector (direction) to find analogies for.
+        topn: Number of analogies to return.
+        thresh: Threshold for cosine similarity.
+        max_words: Maximum number of words to consider.
+
+        Returns: List of n analogies, each as a tuple of (word1, word2, score).
+
+        Metric is cos(a-c, b-d) if |b-d|^2 < thresh, otherwise 0
         """
         vecs, vocab = self.vecs[:max_words], self.words[:max_words]
         self.compute_neighbors_if_necessary(thresh, max_words)
@@ -92,6 +145,12 @@ class WordEmbedding:
         return ans
     
     def compute_neighbors_if_necessary(self, thresh, max_words):
+        """
+        Compute the neighbors of a word (if needed), using cosine similarity.
+
+        thresh: Threshold for cosine similarity.
+        max_words: Maximum number of words to consider.
+        """
         if self._neighbors is not None and self.thresh == thresh and self.max_words == max_words:
             return
         print("Computing neighbors")
@@ -109,16 +168,42 @@ class WordEmbedding:
         self._neighbors = rows, cols, np.array([v/np.linalg.norm(v) for v in vecs])
 
     def neighbors(self, word, thresh=1):
+        """
+        Get the neighbors of a word, using cosine similarity.
+
+        word: Word to find neighbors for.
+        thresh: Threshold for cosine similarity.
+
+        Returns: List of neighbors of the word.
+        """
         dots = self.vecs.dot(self.v(word))
         return [self.words[i] for i, dot in enumerate(dots) if dot >= 1-thresh/2]
     
     def specific_analogy(self, a, b, c, topn=500, thresh=1, max_words=50000):
+        """
+        Get the specific analogy of a vector, taking a, b, and c as input where a:b::c:?.
+
+        a, b, c: Words to find the analogy for.
+        topn: Number of analogies to return.
+        thresh: Threshold for cosine similarity.
+        max_words: Maximum number of words to consider.
+
+        Returns: List of specific analogies, each as a tuple of (word1, word2, score).
+        """
         v = self.diff(a, b) 
         all_analogies = self.n_analogies(v, topn, thresh, max_words)
         #filter analogies that do not contain c
         return [(x, y, s) for x, y, s in all_analogies if c in [x, y]]
     
     def visualize_word_embedding(self, from_idx=400, to_idx=500):
+        """
+        Visualize the word embeddings using PCA.
+
+        from_idx: Start index of the subset of words to visualize.
+        to_idx: End index of the subset of words to visualize.
+
+        Returns: None (plots the visualization).
+        """
         pca = PCA(n_components=1)
         X = self.vecs[from_idx:to_idx]
         pca = PCA(n_components=2)
